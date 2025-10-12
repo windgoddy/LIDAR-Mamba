@@ -147,7 +147,7 @@ def main(args):
             scan_list = json.load(f)
             log_train.info("Load scan list success! ")
             print("Load scan list success! ")
-# testing2
+# testing3
     max_F1 = 0
     max_Metrics = {'epoch': 0, 'mIoU': 0, 'ODS': 0, 'OIS': 0, 'F1': 0, 'Precision': 0, 'Recall': 0}
 
