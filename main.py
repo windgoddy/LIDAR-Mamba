@@ -24,6 +24,15 @@ from tqdm import tqdm
 from mmengine.optim.scheduler.lr_scheduler import PolyLR
 import json
 
+# zxz_导入调试配置
+try:
+    from zxz_debug_config import IS_DEBUG_MODE, DEBUG_PARAMS
+    print(f"zxz_主程序调试配置已加载: DEBUG_MODE={IS_DEBUG_MODE}")
+except ImportError:
+    IS_DEBUG_MODE = False
+    DEBUG_PARAMS = {}
+    print("zxz_调试配置文件未找到，使用默认参数")
+
 def get_args_parser():
     parser = argparse.ArgumentParser('LIDAR FOR MULTI-MODAL CRACK SEGMENTATION', add_help=False)
     parser.add_argument('--BCELoss_ratio', default=1, type=float)
@@ -58,6 +67,17 @@ def get_args_parser():
     return parser
 
 def main(args):
+    # zxz_调试模式：自动应用优化参数
+    if IS_DEBUG_MODE and DEBUG_PARAMS:
+        print("zxz_启用调试模式，正在应用优化参数...")
+        original_params = {}
+        for param, value in DEBUG_PARAMS.items():
+            if hasattr(args, param):
+                original_params[param] = getattr(args, param)
+                setattr(args, param, value)
+                print(f"zxz_参数调整: {param} = {original_params[param]} -> {value}")
+        print("zxz_调试参数应用完成!")
+    
     checkpoints_path = "./checkpoints"
     curTime = time.strftime('%Y_%m_%d_%H:%M:%S', time.localtime(time.time()))
     dataset_name = (args.dataset_path).split('/')[-1]
