@@ -78,10 +78,8 @@ class CrackDetector:
         with torch.no_grad():
             # 模型推理
             outputs = self.model(modal_imgs, scan_orders)
-            # 首先应用sigmoid，然后从字典中取出'pred_masks'
-            pred_masks = torch.sigmoid(outputs['pred_masks']) 
             # 从批次中取出第一张图 (batch_size=1)，并选择第一个通道
-            mask = pred_masks[0, 0, ...].cpu().numpy()
+            mask = outputs[0, 0, ...].cpu().numpy()
             
             # 从mask提取边界框
             boxes = self.segment_to_boxes(mask)
@@ -192,6 +190,12 @@ class CrackDetector:
                 })
             
             detection_results.append(result)
+            
+            # zxz_保存原始mask用于调试
+            mask_save_path = os.path.join(output_dir, f"{image_name}_mask.png")
+            mask_normalized = ((mask - mask.min()) / (mask.max() - mask.min() + 1e-8) * 255).astype(np.uint8)
+            cv2.imwrite(mask_save_path, mask_normalized)
+            print(f"zxz_原始mask已保存: {mask_save_path}")
             
             # 可视化并保存
             save_path = os.path.join(output_dir, f"{image_name}_detection.png")
