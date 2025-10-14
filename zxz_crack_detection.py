@@ -191,66 +191,7 @@ class CrackDetector:
             
             detection_results.append(result)
             
-            # zxz_保存原始mask用于调试
-            mask_save_path = os.path.join(output_dir, f"{image_name}_mask.png")
-            
-            # zxz_保存不同版本的mask进行对比
-            # 1. 原始mask（归一化到0-255）
-            if mask.max() > mask.min():
-                mask_normalized = ((mask - mask.min()) / (mask.max() - mask.min()) * 255).astype(np.uint8)
-            else:
-                mask_normalized = np.zeros_like(mask, dtype=np.uint8)
-                print(f"zxz_警告 - mask所有值都相同: {mask.min()}")
-            cv2.imwrite(mask_save_path, mask_normalized)
-            
-            # 2. 直接乘以255的版本
-            mask_direct = (mask * 255).astype(np.uint8)
-            mask_direct_path = os.path.join(output_dir, f"{image_name}_mask_direct.png")
-            cv2.imwrite(mask_direct_path, mask_direct)
-            
-            # 3. 二值化版本（阈值0.5）
-            mask_binary = (mask > 0.5).astype(np.uint8) * 255
-            mask_binary_path = os.path.join(output_dir, f"{image_name}_mask_binary.png")
-            cv2.imwrite(mask_binary_path, mask_binary)
-            
-            print(f"zxz_原始mask已保存: {mask_save_path}")
-            print(f"zxz_直接mask已保存: {mask_direct_path}")
-            print(f"zxz_二值mask已保存: {mask_binary_path}")
-            
-            # zxz_创建对比图：原图 vs mask vs 检测结果
-            fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-            
-            # 原图
-            axes[0].imshow(original_image)
-            axes[0].set_title('Original Image')
-            axes[0].axis('off')
-            
-            # mask
-            axes[1].imshow(mask, cmap='hot')
-            axes[1].set_title(f'Segmentation Mask\nRange: [{mask.min():.3f}, {mask.max():.3f}]')
-            axes[1].axis('off')
-            
-            # 检测结果
-            axes[2].imshow(original_image)
-            for i, box_info in enumerate(boxes):
-                bbox = box_info['bbox']
-                x1, y1, x2, y2 = bbox
-                width, height = x2 - x1, y2 - y1
-                rect = patches.Rectangle((x1, y1), width, height, 
-                                       linewidth=2, edgecolor='red', facecolor='none')
-                axes[2].add_patch(rect)
-                axes[2].text(x1, y1-10, f'Crack {i+1}', color='red', fontsize=10)
-            axes[2].set_title(f'Detection Results ({len(boxes)} cracks)')
-            axes[2].axis('off')
-            
-            # 保存对比图
-            comparison_path = os.path.join(output_dir, f"{image_name}_comparison.png")
-            plt.tight_layout()
-            plt.savefig(comparison_path, dpi=300, bbox_inches='tight')
-            plt.close()
-            print(f"zxz_对比图已保存: {comparison_path}")
-            
-            # 可视化并保存（保留原有功能）
+            # 可视化并保存
             save_path = os.path.join(output_dir, f"{image_name}_detection.png")
             self.visualize_detection(original_image, boxes, save_path)
             
