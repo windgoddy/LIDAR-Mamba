@@ -23,7 +23,8 @@ if __name__ == '__main__':
     args.modals = ['RGB', 'dep']
     device = torch.device(args.device)
 
-    load_model_file = "./checkpoints/weights/2025_09_15_15:13:07_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
+    # zxz_使用新生成的预训练权重文件
+    load_model_file = "./checkpoints/weights/2025_10_13_21:26:46_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
     # load_model_file = "./checkpoints/weights/checkpoint_best.pth"
     model, criterion = build_model(args)
     model.cuda()
