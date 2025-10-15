@@ -1,0 +1,142 @@
+[
+  {
+    "image_name": "runway_cb6433",
+    "num_cracks": 2,
+    "detections": [
+      {
+        "crack_id": 1,
+        "bbox": [
+          214,
+          10,
+          356,
+          27
+        ],
+        "confidence": 1.0,
+        "area": 1526.5
+      },
+      {
+        "crack_id": 2,
+        "bbox": [
+          15,
+          2,
+          37,
+          20
+        ],
+        "confidence": 0.272,
+        "area": 272.0
+      }
+    ]
+  },
+  {
+    "image_name": "concrete_d9d1af",
+    "num_cracks": 2,
+    "detections": [
+      {
+        "crack_id": 1,
+        "bbox": [
+          222,
+          10,
+          356,
+          27
+        ],
+        "confidence": 1.0,
+        "area": 1375.0
+      },
+      {
+        "crack_id": 2,
+        "bbox": [
+          15,
+          3,
+          37,
+          20
+        ],
+        "confidence": 0.248,
+        "area": 248.0
+      }
+    ]
+  },
+  {
+    "image_name": "runway_bdb0f9",
+    "num_cracks": 2,
+    "detections": [
+      {
+        "crack_id": 1,
+        "bbox": [
+          237,
+          10,
+          364,
+          27
+        ],
+        "confidence": 1.0,
+        "area": 1309.0
+      },
+      {
+        "crack_id": 2,
+        "bbox": [
+          15,
+          3,
+          38,
+          21
+        ],
+        "confidence": 0.273,
+        "area": 273.0
+      }
+    ]
+  },
+  {
+    "image_name": "bitumen_798dc0",
+    "num_cracks": 2,
+    "detections": [
+      {
+        "crack_id": 1,
+        "bbox": [
+          223,
+          9,
+          348,
+          26
+        ],
+        "confidence": 1.0,
+        "area": 1270.0
+      },
+      {
+        "crack_id": 2,
+        "bbox": [
+          15,
+          2,
+          37,
+          20
+        ],
+        "confidence": 0.2485,
+        "area": 248.5
+      }
+    ]
+  },
+  {
+    "image_name": "runway_cf0cf0",
+    "num_cracks": 2,
+    "detections": [
+      {
+        "crack_id": 1,
+        "bbox": [
+          222,
+          10,
+          356,
+          27
+        ],
+        "confidence": 1.0,
+        "area": 1461.5
+      },
+      {
+        "crack_id": 2,
+        "bbox": [
+          15,
+          2,
+          37,
+          20
+        ],
+        "confidence": 0.2695,
+        "area": 269.5
+      }
+    ]
+  }
+]

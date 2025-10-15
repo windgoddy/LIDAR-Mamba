@@ -24,7 +24,7 @@ if __name__ == '__main__':
     device = torch.device(args.device)
 
     # zxz_使用新生成的预训练权重文件
-    load_model_file = "./checkpoints/weights/2025_10_13_21:26:46_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
+    load_model_file = "./checkpoints/weights/2025_10_14_18:14:32_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
     # load_model_file = "./checkpoints/weights/checkpoint_best.pth"
     model, criterion = build_model(args)
     model.cuda()

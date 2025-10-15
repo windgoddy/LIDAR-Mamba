@@ -42,8 +42,26 @@ class CrackDetector:
         Returns:
             boxes: [(x1, y1, x2, y2, confidence, area), ...]
         """
-        # 确保是二值化mask
-        binary_mask = (mask > 0.5).astype(np.uint8) * 255
+        # 将模型输出转换为概率：如果看起来像 logits（包含负值或大于1），先 sigmoid
+        try:
+            mmin, mmax = float(np.min(mask)), float(np.max(mask))
+        except Exception:
+            mmin, mmax = 0.0, 0.0
+
+        if mmin < -0.1 or mmax > 1.5:
+            # likely logits -> apply sigmoid
+            mask_prob = 1.0 / (1.0 + np.exp(-mask))
+        else:
+            # already probabilities (0..1) or scaled
+            mask_prob = mask.astype(np.float32)
+
+        # 为兼容之前保存的可视化（有时 out 被放大到 0..255），归一化到 [0,1]
+        if mask_prob.max() > 1.0:
+            mask_prob = mask_prob / (mask_prob.max() + 1e-9)
+
+        # 使用检测阈值（可通过 args 传入），默认 0.5
+        thresh = getattr(self.args, 'detection_thresh', 0.5)
+        binary_mask = (mask_prob > thresh).astype(np.uint8) * 255
         
         # 查找连通区域
         contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -82,7 +100,8 @@ class CrackDetector:
             mask = outputs[0, 0, ...].cpu().numpy()
             
             # 从mask提取边界框
-            boxes = self.segment_to_boxes(mask)
+            min_area = getattr(self.args, 'min_area', 100)
+            boxes = self.segment_to_boxes(mask, min_area=min_area)
             
             return mask, boxes
 
@@ -154,11 +173,10 @@ class CrackDetector:
             # 获取原始图像用于可视化
             original_image = modal_imgs[0][0].permute(1, 2, 0).cpu().numpy()
             # 定义ImageNet的均值和标准差
-            mean = np.array([0.485, 0.456, 0.406])
-            std = np.array([0.229, 0.224, 0.225])
-            # 反归一化
-            original_image = original_image * std + mean
-            original_image = np.clip(original_image, 0, 1)
+            # 数据集使用 Normalize((0.5,0.5,0.5),(0.5,0.5,0.5))，因此反归一化如下
+            mean = np.array([0.5, 0.5, 0.5])
+            std = np.array([0.5, 0.5, 0.5])
+            original_image = (original_image * std) + mean
             original_image = np.clip(original_image, 0, 1)
             
             # 获取扫描顺序（如果需要）
@@ -219,6 +237,11 @@ class CrackDetector:
 def main():
     # 解析参数
     parser = argparse.ArgumentParser('LIDAR裂缝目标检测', parents=[get_args_parser()])
+    # 增加检测相关可调参数（阈值和最小面积）
+    parser.add_argument('--detection_thresh', type=float, default=0.1,
+                        help='Threshold on predicted probability to consider a pixel as crack')
+    parser.add_argument('--min_area', type=int, default=20,
+                        help='Minimum contour area (in pixels) to be considered a crack')
     args = parser.parse_args()
     
     # 设置参数
@@ -228,13 +251,14 @@ def main():
     args.modals = ['RGB', 'dep']
     
     # 权重文件路径（使用您训练好的权重）
-    model_path = "./checkpoints/weights/2025_10_13_21:26:46_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
+    model_path = "./checkpoints/weights/2025_10_15_08:03:18_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
     
     # 输出目录
     output_dir = "./detection_results"
     
     # 初始化检测器
     detector = CrackDetector(model_path, args)
+    print(f"zxz_检测参数: detection_thresh={args.detection_thresh}, min_area={args.min_area}")
     
     # 创建测试数据加载器
     test_data_loader = create_dataset(args)

@@ -231,7 +231,7 @@ def eval(log_eval, results_dir, epoch):
 if __name__ == '__main__':
     suffix_gt = "lab"
     suffix_pred = "pre"
-    results_dir = "../results/results_TEST/"
+    results_dir = "./results/results_TEST"
     logging.info(results_dir)
     src_img_list, tgt_img_list, pred_imgs_names, gt_imgs_names = get_image_pairs(results_dir, suffix_gt, suffix_pred)
     assert len(src_img_list) == len(tgt_img_list)

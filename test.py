@@ -23,7 +23,7 @@ if __name__ == '__main__':
     args.batch_size = 1
     device = torch.device(args.device)
     test_dl = create_dataset(args)
-    load_model_file = "./checkpoints/weights/checkpoint_best.pth"
+    load_model_file = "./checkpoints/weights/2025_10_15_08:03:18_Dataset->CrackDepth_modals->_RGB_dep/checkpoint_best.pth"
     data_size = len(test_dl)
     model, criterion = build_model(args)
     model.cuda()
