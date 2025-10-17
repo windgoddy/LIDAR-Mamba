@@ -96,6 +96,8 @@ class CrackDetector:
         with torch.no_grad():
             # 模型推理
             outputs = self.model(modal_imgs, scan_orders)
+            print(f"zxz_模型输出形状: {outputs.shape}")
+            print(f"zxz_模型输出内容: {outputs}")
             # 从批次中取出第一张图 (batch_size=1)，并选择第一个通道
             mask = outputs[0, 0, ...].cpu().numpy()
             
