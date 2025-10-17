@@ -26,12 +26,19 @@ class CrackDetector:
         # 加载模型
         self.model, self.criterion = build_model(args)
         self.model.cuda()
-        self.model.eval()
         
-        # 加载权重
-        state_dict = torch.load(model_path)
-        self.model.load_state_dict(state_dict["model"])
+        # zxz_确保模型在正确的模式
+        self.model.eval()  # 确保是评估模式
+        
+        # zxz_加载权重后验证
+        state_dict = torch.load(model_path, map_location=self.device)
+        if "model" in state_dict:
+            self.model.load_state_dict(state_dict["model"])
+        else:
+            self.model.load_state_dict(state_dict)
+        
         print(f"zxz_模型加载成功: {model_path}")
+        print(f"zxz_模型参数数量: {sum(p.numel() for p in self.model.parameters())}")
 
     def segment_to_boxes(self, mask, min_area=100):
         """
@@ -59,12 +66,31 @@ class CrackDetector:
         if mask_prob.max() > 1.0:
             mask_prob = mask_prob / (mask_prob.max() + 1e-9)
 
-        # 使用检测阈值（可通过 args 传入），默认 0.5
+        # zxz_尝试不同的阈值策略
+        print(f"zxz_调试 - 尝试不同检测策略:")
+        
+        # 策略1: 自适应阈值
+        thresh_adaptive = np.percentile(mask_prob, 95)  # 取95%分位数作为阈值
+        binary_adaptive = (mask_prob > thresh_adaptive).astype(np.uint8) * 255
+        contours_adaptive, _ = cv2.findContours(binary_adaptive, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        print(f"  自适应阈值{thresh_adaptive:.4f}: {len(contours_adaptive)}个区域")
+        
+        # 策略2: 固定阈值但更宽松
+        thresh_low = 0.01
+        binary_low = (mask_prob > thresh_low).astype(np.uint8) * 255
+        contours_low, _ = cv2.findContours(binary_low, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        print(f"  低阈值{thresh_low}: {len(contours_low)}个区域")
+        
+        # 保存不同阈值的结果
+        cv2.imwrite('./debug_adaptive_binary.png', binary_adaptive)
+        cv2.imwrite('./debug_low_binary.png', binary_low)
+        
+        # 使用原来的逻辑
         thresh = getattr(self.args, 'detection_thresh', 0.5)
         binary_mask = (mask_prob > thresh).astype(np.uint8) * 255
-        
-        # 查找连通区域
         contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        print(f"  当前阈值{thresh}: {len(contours)}个区域")
         
         boxes = []
         for i, contour in enumerate(contours):
@@ -94,14 +120,33 @@ class CrackDetector:
     def detect_single_image(self, modal_imgs, scan_orders=None):
         """检测单张图像"""
         with torch.no_grad():
-            # 模型推理
+            # zxz_添加输入数据调试
+            print(f"zxz_调试 - 输入数据形状: {[img.shape for img in modal_imgs]}")
+            
             outputs = self.model(modal_imgs, scan_orders)
-            print(f"zxz_模型输出形状: {outputs.shape}")
-            print(f"zxz_模型输出内容: {outputs}")
-            # 从批次中取出第一张图 (batch_size=1)，并选择第一个通道
+            
+            # zxz_添加输出调试
+            print(f"zxz_调试 - 模型输出形状: {outputs.shape}")
+            print(f"zxz_调试 - 输出数值范围: [{outputs.min():.3f}, {outputs.max():.3f}]")
+            
             mask = outputs[0, 0, ...].cpu().numpy()
             
-            # 从mask提取边界框
+            # zxz_详细分析mask的分布
+            print(f"zxz_调试 - mask统计:")
+            print(f"  前10行均值: {np.mean(mask[:10, :]):.3f}")
+            print(f"  中间10行均值: {np.mean(mask[250:260, :]):.3f}")
+            print(f"  后10行均值: {np.mean(mask[-10:, :]):.3f}")
+            
+            # 保存mask热力图
+            mask_normalized = (mask - mask.min()) / (mask.max() - mask.min() + 1e-8)
+            plt.figure(figsize=(10, 10))
+            plt.imshow(mask_normalized, cmap='hot', interpolation='nearest')
+            plt.colorbar()
+            plt.title('模型输出热力图')
+            plt.savefig('./debug_mask_heatmap.png', dpi=150, bbox_inches='tight')
+            plt.close()
+            print(f"zxz_热力图已保存: ./debug_mask_heatmap.png")
+            
             min_area = getattr(self.args, 'min_area', 100)
             boxes = self.segment_to_boxes(mask, min_area=min_area)
             
