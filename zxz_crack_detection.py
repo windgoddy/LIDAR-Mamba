@@ -105,6 +105,20 @@ class CrackDetector:
             
             return mask, boxes
 
+    def scale_boxes_to_original(self, boxes, original_size):
+        """将512x512坐标缩放到原始图像尺寸"""
+        if not boxes or original_size == (512, 512):
+            return boxes
+        
+        scale_x = original_size[0] / 512
+        scale_y = original_size[1] / 512
+        
+        for box_info in boxes:
+            x1, y1, x2, y2 = box_info['bbox']
+            box_info['bbox'] = [int(x1*scale_x), int(y1*scale_y), int(x2*scale_x), int(y2*scale_y)]
+        
+        return boxes
+
     def visualize_detection(self, image, boxes, save_path=None, show_confidence=True):
         """可视化检测结果"""
         fig, ax = plt.subplots(1, figsize=(12, 8))
@@ -242,6 +256,8 @@ def main():
                         help='Threshold on predicted probability to consider a pixel as crack')
     parser.add_argument('--min_area', type=int, default=20,
                         help='Minimum contour area (in pixels) to be considered a crack')
+    parser.add_argument('--use_original_image', action='store_true',
+                        help='Use original high-resolution image for visualization (requires coordinate scaling)')
     args = parser.parse_args()
     
     # 设置参数
